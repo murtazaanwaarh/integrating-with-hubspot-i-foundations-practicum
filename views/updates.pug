@@ -1,0 +1,12 @@
+html
+  head
+    title= title
+  body
+    h1= title
+    form(action='/update-cobj', method='POST')
+      label(for='name') Name:
+      input(type='text', name='name', required=true)
+      label(for='bio') Bio:
+      input(type='text', name='bio', required=true)
+      button(type='submit') Submit
+    a(href='/') Return to the homepage
