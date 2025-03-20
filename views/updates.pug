@@ -1,12 +1,23 @@
+doctype html
 html
   head
     title= title
+    link(rel="stylesheet", href="/css/style.css")
   body
-    h1= title
-    form(action='/update-cobj', method='POST')
-      label(for='name') Name:
-      input(type='text', name='name', required=true)
-      label(for='bio') Bio:
-      input(type='text', name='bio', required=true)
-      button(type='submit') Submit
-    a(href='/') Return to the homepage
+    h1 Add a New Pet
+    form(action="/update-cobj" method="POST")
+      label(for="name") Name:
+      input(type="text" name="name" required)
+      br
+      label(for="specie") Specie:
+      input(type="text" name="specie" required)
+      br
+      label(for="owner_s_name") Owner's Name:
+      input(type="text" name="owner_s_name" required)
+      br
+      label(for="color") Color:
+      input(type="text" name="color" required)
+      br
+      button(type="submit") Add Pet
+    br
+    a(href="/") Return to Homepage

@@ -1,0 +1,22 @@
+doctype html
+html
+  head
+    title= title
+    link(rel="stylesheet", href="/css/style.css")
+  body
+    h1 Pets Records
+    a(href="/update-cobj") Add New Pet
+    table(border="1")
+      thead
+        tr
+          th Name
+          th Specie
+          th Owner's Name
+          th Color
+      tbody
+        each pet in pets
+          tr
+            td= pet.properties.name
+            td= pet.properties.specie
+            td= pet.properties.owner_s_name
+            td= pet.properties.color

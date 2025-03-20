@@ -1,72 +1,86 @@
-const express = require('express');
-const axios = require('axios');
-const dotenv = require('dotenv');
-const pug = require('pug');
-dotenv.config();
-console.log("testing")
-console.log(process.env.HUBSPOT_API_KEY);  // Should print the API key
+require("dotenv").config();
+const express = require("express");
+const axios = require("axios");
+const bodyParser = require("body-parser");
 
 const app = express();
+const PORT = 3000;
+const HUBSPOT_API_URL = "https://api.hubapi.com/crm/v3/objects";
+const GET_HUBSPOT_API_URL = "https://api.hubapi.com/crm/v3/objects";
+const HUBSPOT_ACCESS_TOKEN = process.env.HUBSPOT_ACCESS_TOKEN;
+const CUSTOM_OBJECT_TYPE = process.env.CUSTOM_OBJECT_TYPE;
 
-app.set('view engine', 'pug');
-app.use(express.static(__dirname + '/public'));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// Middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.set("view engine", "pug");
 
 // * Please DO NOT INCLUDE the private app access token in your repo. Don't do this practicum in your normal account.
-const PRIVATE_APP_ACCESS = '';
 
 // TODO: ROUTE 1 - Create a new app.get route for the homepage to call your custom object data. Pass this data along to the front-end and create a new pug template in the views folder.
 
 // * Code for Route 1 goes here
 
-app.get('/', async (req, res) => {
-    try {
-      const response = await axios.get('https://api.hubapi.com/crm/v3/objects/pets', {
-        headers: { Authorization: `Bearer ${process.env.HUBSPOT_API_KEY}` }
-      });
-      res.render('homepage', { records: response.data.results });
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('Error retrieving records');
-    }
-  });
-  
+// Axios Configuration
+const axiosInstance = axios.create({
+  baseURL: HUBSPOT_API_URL,
+  headers: {
+    Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+    "Content-Type": "application/json",
+  },
+});
+
+
+const axiosInstance_get = axios.create({
+  baseURL: GET_HUBSPOT_API_URL,
+  headers: {
+    Authorization: `Bearer ${HUBSPOT_ACCESS_TOKEN}`,
+    "Content-Type": "application/json",
+  },
+});
+
+app.get("/", async (req, res) => {
+  console.log("function entered")
+  try {
+    const response = await axiosInstance_get.get(`/${CUSTOM_OBJECT_TYPE}?properties=name,specie,owner_s_name,color`);
+    const pets = response.data;
+    console.log(pets);
+    console.log("HubSpot API Response:", JSON.stringify(response.data, null, 2));  // ✅ Log API response
+
+    res.render("homepage", { pets: response.data.results, title: "Pets Records" });
+  } catch (error) {
+    console.error("Error fetching records:", error.response?.data || error.message);
+    res.status(500).send("Error fetching data");
+  }
+});
+
 
 // TODO: ROUTE 2 - Create a new app.get route for the form to create or update new custom object data. Send this data along in the next route.
 
 // * Code for Route 2 goes here
 
-app.get('/update-cobj', (req, res) => {
-    res.render('updates', { title: 'Update Custom Object Form' });
-  });
-  
+// 2️⃣ GET "/update-cobj" - Render Form to Add New Pet
+app.get("/update-cobj", (req, res) => {
+  res.render("updates", { title: "Add New Pet" });
+});
 
-// TODO: ROUTE 3 - Create a new app.post route for the custom objects form to create or update your custom object data. Once executed, redirect the user to the homepage.
+// 3️⃣ POST "/update-cobj" - Submit Form Data to HubSpot
+app.post("/update-cobj", async (req, res) => {
+  const { name, specie, owner_s_name, color } = req.body;
 
-// * Code for Route 3 goes here
-
-
-app.get('/update-cobj', (req, res) => {
-    res.render('updates', { title: 'Update Custom Object Form' });
-  });
-  
-app.post('/update-cobj', async (req, res) => {
   try {
-    const { name, bio } = req.body;
-    const response = await axios.post('https://api.hubapi.com/crm/v3/objects/pets', {
-      properties: { Name: name, Bio: bio }
-    }, {
-      headers: { Authorization: `Bearer ${process.env.HUBSPOT_API_KEY}` }
+    await axiosInstance.post(`/${CUSTOM_OBJECT_TYPE}`, {
+      properties: { name, specie, owner_s_name, color },
     });
-    res.redirect('/');
+
+    res.redirect("/");
   } catch (error) {
-    console.error(error);
-    res.status(500).send('Error creating record');
+    console.error("Error creating record:", error.response?.data || error.message);
+    res.status(500).send("Error creating record");
   }
 });
-  
 
-
-// * Localhost
-app.listen(3000, () => console.log('Listening on http://localhost:3000'));
+// Start Server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
